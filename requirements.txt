@@ -1,5 +1,7 @@
-dash~=1.18.1
+dash>=1.19.0
 pandas
 xlrd
 dash-bootstrap-components
 openpyxl
+plotly-express
+dash-daq

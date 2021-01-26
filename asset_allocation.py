@@ -29,6 +29,9 @@ df = pd.read_excel(DATA_PATH.joinpath("historic.xlsx"))
 MAX_YR = df.Year.max()
 MIN_YR = df.Year.min()
 
+START_YR = 2007
+
+
 # since data is as of year end, need to add start year
 df = (
     df.append({"Year": MIN_YR - 1}, ignore_index=True)
@@ -389,11 +392,20 @@ time_period_card = html.Div(
             dcc.RadioItems(
                 id="select_timeframe",
                 options=[
-                    {"label": "2007-2008 Great Financial Crisis", "value": "2007"},
-                    {"label": "2000 Dotcom Bubble peak", "value": "1999"},
-                    {"label": "1970s Energy Crisis", "value": "1970"},
-                    {"label": "1929 start of Great Depression", "value": "1929"},
-                    {"label": "1928-2019", "value": "1928"},
+                    {
+                        "label": f"2007-2008 Great Financial Crisis to {MAX_YR}",
+                        "value": "2007",
+                    },
+                    {
+                        "label": "1999-2010 Includes 2000 Dotcom Bubble peak",
+                        "value": "1999",
+                    },
+                    {"label": "1969-1979 1970s Energy Crisis", "value": "1970"},
+                    {
+                        "label": f"1929-1940  20 years following the Great Depression",
+                        "value": "1929",
+                    },
+                    {"label": f"{MIN_YR}-{MAX_YR}", "value": "1928"},
                 ],
                 labelStyle={"display": "block"},
                 labelClassName="m-2",
@@ -414,11 +426,11 @@ amount_input_card = html.Div(
                     dbc.InputGroupAddon("Start Amount $ :", addon_type="prepend"),
                     dbc.Input(
                         id="starting_amount",
-                        placeholder="$",
+                        placeholder="Min $10",
                         type="number",
                         persistence=True,
                         persistence_type="session",
-                        min=0,
+                        min=10,
                         value=10000,
                     ),
                 ],
@@ -434,7 +446,7 @@ amount_input_card = html.Div(
                         persistence=True,
                         persistence_type="session",
                         min=1,
-                        value=13,
+                        value=MAX_YR - START_YR + 1,
                     ),
                 ],
                 className="mb-3",
@@ -444,13 +456,13 @@ amount_input_card = html.Div(
                     dbc.InputGroupAddon("Start Year:", addon_type="prepend"),
                     dbc.Input(
                         id="start_yr",
-                        placeholder=f"{MIN_YR} to {MAX_YR}",
+                        placeholder=f"min {MIN_YR}   max {MAX_YR}",
                         type="number",
                         persistence=True,
                         persistence_type="session",
                         min=MIN_YR,
                         max=MAX_YR,
-                        value=2007,
+                        value=START_YR,
                     ),
                 ],
                 className="mb-3",
@@ -678,7 +690,8 @@ Callbacks
 
 @app.callback(
     Output("pie_allocation", "figure"),
-    [Input("stock_bond", "value"), Input("cash", "value")],
+    Input("stock_bond", "value"),
+    Input("cash", "value"),
 )
 def update_pie(stocks, cash):
     bonds = 100 - stocks - cash
@@ -695,13 +708,11 @@ def update_pie(stocks, cash):
 
 
 @app.callback(
-    [
-        Output("stock_bond", "max"),
-        Output("stock_bond", "marks"),
-        Output("stock_bond", "value"),
-    ],
-    [Input("cash", "value")],
-    [State("stock_bond", "value")],
+    Output("stock_bond", "max"),
+    Output("stock_bond", "marks"),
+    Output("stock_bond", "value"),
+    Input("cash", "value"),
+    State("stock_bond", "value"),
 )
 def update_stock_slider(cash, initial_stock_value):
     max_slider = 100 - int(cash)
@@ -721,38 +732,54 @@ def update_stock_slider(cash, initial_stock_value):
 
 
 @app.callback(
-    [Output("planning_time", "value"), Output("start_yr", "value")],
-    [Input("select_timeframe", "value")],
+    Output("planning_time", "value"),
+    Output("start_yr", "value"),
+    Output("select_timeframe", "value"),
+    Input("planning_time", "value"),
+    Input("start_yr", "value"),
+    Input("select_timeframe", "value"),
 )
-def update_timeframe(selected_yr):
-    timeframe = {"2007": 13, "1999": 10, "1970": 10, "1929": 20, "1928": 98}
-    return timeframe[selected_yr], selected_yr
+def update_timeframe(planning_time, start_yr, selected):
+    """ syncs inputs with selected time periods """
+    ctx = dash.callback_context
+    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    timeframe = {
+        "2007": MAX_YR - START_YR + 1,
+        "1999": 10,
+        "1970": 10,
+        "1929": 20,
+        "1928": MAX_YR - MIN_YR + 1,
+    }
+    if trigger_id == "select_timeframe":
+        return timeframe[selected], selected, selected
+    if trigger_id in ["planning_time", "start_yr"]:
+        selected = start_yr if timeframe.get(start_yr) == planning_time else None
+        return planning_time, start_yr, selected
+    return planning_time, start_yr, selected
 
 
 @app.callback(
-    [
-        Output("total_returns", "data"),
-        Output("returns_chart", "figure"),
-        Output("summary_table", "children"),
-        Output("results", "value"),
-    ],
-    [
-        Input("stock_bond", "value"),
-        Input("cash", "value"),
-        Input("starting_amount", "value"),
-        Input("planning_time", "value"),
-        Input("start_yr", "value"),
-        Input("inflation", "value"),
-    ],
+    Output("total_returns", "data"),
+    Output("returns_chart", "figure"),
+    Output("summary_table", "children"),
+    Output("results", "value"),
+    Input("stock_bond", "value"),
+    Input("cash", "value"),
+    Input("starting_amount", "value"),
+    Input("planning_time", "value"),
+    Input("start_yr", "value"),
+    Input("inflation", "value"),
 )
 def update_totals(stocks, cash, start_bal, planning_time, start_yr, inflation):
     pmt = 0
-    if start_bal is None:
-        start_bal = 0
-    if planning_time is None:
+    if start_bal is None or start_bal < 10:
+        start_bal = 10
+    if planning_time is None or planning_time < 1:
         planning_time = 1
-    if start_yr is None:
+    if start_yr is None or int(start_yr) < MIN_YR:
         start_yr = MIN_YR
+    if int(start_yr) > MAX_YR:
+        start_yr = MAX_YR
 
     # calculate valid time frames and ranges for UI
     max_time = MAX_YR + 1 - int(start_yr)
