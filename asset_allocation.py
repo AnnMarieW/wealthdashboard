@@ -3,7 +3,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output, State, ClientsideFunction
 import dash_table
 import dash_table.FormatTemplate as FormatTemplate
 
@@ -282,8 +282,7 @@ asset_allocation_text = dcc.Markdown(
 
 backtesting_text = dcc.Markdown(
     """
-
-    Past performance certainly does not determine future results.... but you can still
+    Past performance certainly does not determine future results, but you can still
     learn a lot by reviewing how various asset classes have performed over time.
 
     Use the sliders to change the asset allocation (how much you invest in cash vs
@@ -328,7 +327,7 @@ Make Tabs
 """
 
 
-# =======Play tab components
+#=======Play tab components
 
 asset_allocation_card = html.Div(
     dbc.Card(
@@ -393,16 +392,16 @@ time_period_card = html.Div(
                 id="select_timeframe",
                 options=[
                     {
-                        "label": f"2007-2008 Great Financial Crisis to {MAX_YR}",
+                        "label": f"2007-2008: Great Financial Crisis to {MAX_YR}",
                         "value": "2007",
                     },
                     {
-                        "label": "1999-2010 Includes 2000 Dotcom Bubble peak",
+                        "label": "1999-2010: The decade including 2000 Dotcom Bubble peak",
                         "value": "1999",
                     },
-                    {"label": "1969-1979 1970s Energy Crisis", "value": "1970"},
+                    {"label": "1969-1979:  The 1970s Energy Crisis", "value": "1970"},
                     {
-                        "label": f"1929-1940  20 years following the Great Depression",
+                        "label": f"1929-1940:  The 20 years following the Great Depression",
                         "value": "1929",
                     },
                     {"label": f"{MIN_YR}-{MAX_YR}", "value": "1928"},
@@ -576,6 +575,7 @@ app.layout = dbc.Container(
                         dcc.Graph(id="returns_chart", className="border"),
                         html.H6(datasource_text),
                         html.Div(id="summary_table"),
+                        dbc.Button('Print', id='print', className="mt-4")
                     ],
                     width={"size": 7, "order": 2},
                     className="pt-4 ",
@@ -805,6 +805,19 @@ def update_totals(stocks, cash, start_bal, planning_time, start_yr, inflation):
     results = "${:0,.0f}     {}".format(dff["Total"].iloc[-1], cagr(dff["Total"]))
 
     return data, figure, summary_table, results
+
+app.clientside_callback(
+    """
+    function(n) {
+        if (n > 0) {
+          window.print()
+        }
+        return ""
+    }
+    """,
+    Output('print', 'target'),
+    Input('print', 'n_clicks'),
+)
 
 
 if __name__ == "__main__":
