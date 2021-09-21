@@ -1,22 +1,12 @@
 # -*- coding: utf-8 -*-
-import dash
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import Dash, dcc, html, dash_table, Input, Output, State, callback_context
+import dash.dash_table.FormatTemplate as FormatTemplate
 import dash_bootstrap_components as dbc
-from dash.dependencies import Input, Output, State, ClientsideFunction
-import dash_table
-import dash_table.FormatTemplate as FormatTemplate
-
+import plotly.graph_objects as go
 import pandas as pd
 import pathlib
-import plotly.graph_objects as go
 
-
-FONT_AWESOME = "https://use.fontawesome.com/releases/v5.10.2/css/all.css"
-
-external_stylesheets = [dbc.themes.SPACELAB, FONT_AWESOME]
-
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app = Dash(__name__, external_stylesheets=[dbc.themes.SPACELAB, dbc.icons.FONT_AWESOME])
 
 # set relative path
 PATH = pathlib.Path(__file__).parent
@@ -25,12 +15,9 @@ DATA_PATH = PATH.joinpath("./data").resolve()
 #  make dataframe from  spreadsheet:
 df = pd.read_excel(DATA_PATH.joinpath("historic.xlsx"))
 
-
 MAX_YR = df.Year.max()
 MIN_YR = df.Year.min()
-
 START_YR = 2007
-
 
 # since data is as of year end, need to add start year
 df = (
@@ -39,68 +26,49 @@ df = (
     .fillna(0)
 )
 
-
 """
 ==========================================================================
 Tables
 """
 
-
-total_returns_table = html.Div(
-    [
-        dash_table.DataTable(
-            id="total_returns",
-            columns=[{"id": "Year", "name": "Year", "type": "text"}]
-            + [
-                {
-                    "id": col,
-                    "name": col,
-                    "type": "numeric",
-                    "format": FormatTemplate.money(0),
-                }
-                for col in ["Cash", "Bonds", "Stocks", "Total"]
-            ],
-            style_table={
-                "overflowY": "scroll",
-                "border": "thin lightgrey solid",
-                "maxHeight": "425px",
-            },
-            style_cell={"textAlign": "right", "font-family": "arial"},
-            style_cell_conditional=[{"if": {"column_id": "Year"}, "type": "text"}],
-        )
-    ]
+total_returns_table = dash_table.DataTable(
+    id="total_returns",
+    columns=[{"id": "Year", "name": "Year", "type": "text"}]
+    + [
+        {
+            "id": col,
+            "name": col,
+            "type": "numeric",
+            "format": FormatTemplate.money(0),
+        }
+        for col in ["Cash", "Bonds", "Stocks", "Total"]
+    ],
+    style_table={
+        "overflowY": "scroll",
+    },
 )
 
-annual_returns_pct_table = html.Div(
-    [
-        dash_table.DataTable(
-            id="annual_returns_pct",
-            columns=(
-                [{"id": "Year", "name": "Year", "type": "text"}]
-                + [
-                    {
-                        "id": col,
-                        "name": col,
-                        "type": "numeric",
-                        "format": FormatTemplate.percentage(1),
-                    }
-                    for col in df.columns[1:]
-                ]
-            ),
-            style_cell={"textAlign": "right", "font-family": "arial"},
-            style_table={
-                "overflowY": "scroll",
-                "border": "thin lightgrey solid",
-                "maxHeight": "400px",
-            },
-            data=df.to_dict("records"),
-        )
-    ],
+annual_returns_pct_table = dash_table.DataTable(
+    id="annual_returns_pct",
+    columns=(
+        [{"id": "Year", "name": "Year", "type": "text"}]
+        + [
+            {
+                "id": col,
+                "name": col,
+                "type": "numeric",
+                "format": FormatTemplate.percentage(1),
+            }
+            for col in df.columns[1:]
+        ]
+    ),
+    data=df.to_dict("records"),
+    style_table={"overflowY": "scroll", "maxHeight": 400},
 )
 
 
 def make_summary_table(dff):
-    """  Make table to show cagr and  best and worst periods"""
+    """Make table to show cagr and  best and worst periods"""
 
     start_yr = dff["Year"].iat[0]
     end_yr = dff["Year"].iat[-1]
@@ -121,7 +89,10 @@ def make_summary_table(dff):
         [
             html.Td("Cash"),
             html.Td(
-                html.I(className="fa fa-money-bill-alt", style={"font-size": "150%"})
+                html.I(
+                    className="fa fa-money-bill-alt",
+                    style={"font-size": "150%"},
+                )
             ),
             html.Td(cagr(dff["All_Cash"])),
             html.Td(worst(dff, "3-mon T.Bill")),
@@ -186,7 +157,7 @@ def make_pie(slider_input, title):
         title_text=title,
         title_x=0.5,
         margin=go.layout.Margin(b=25, t=75, l=35, r=25),
-        height=375,
+        height=325,
         paper_bgcolor="whitesmoke",
     )
     return fig
@@ -202,7 +173,10 @@ def make_returns_chart(dff):
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
-            x=x, y=dff["All_Cash"], name="All Cash", marker=dict(color="#3cb521")
+            x=x,
+            y=dff["All_Cash"],
+            name="All Cash",
+            marker=dict(color="#3cb521"),
         )
     )
     fig.add_trace(
@@ -245,7 +219,7 @@ def make_returns_chart(dff):
         showlegend=True,
         legend=dict(x=0.01, y=0.99),
         height=400,
-        margin=dict(l=40, r=10, t=60, b=30),
+        margin=dict(l=40, r=10, t=60, b=55),
         yaxis=dict(tickprefix="$", fixedrange=True),
         xaxis=dict(title="Year Ended", fixedrange=True, dtick=dtick),
     )
@@ -279,8 +253,7 @@ asset_allocation_text = dcc.Markdown(
 """
 )
 
-
-backtesting_text = dcc.Markdown(
+learn_text = dcc.Markdown(
     """
     Past performance certainly does not determine future results, but you can still
     learn a lot by reviewing how various asset classes have performed over time.
@@ -306,7 +279,6 @@ backtesting_text = dcc.Markdown(
     """
 )
 
-
 footer = html.Div(
     dcc.Markdown(
         """
@@ -317,239 +289,216 @@ footer = html.Div(
           [Email](mailto:awardapps@fastmail.com?subject=cool)
         """
     ),
-    className="p-2 pl-5 pr-5 bg-primary text-white",
+    className="p-2 mt-5 bg-primary text-white small",
 )
-
 
 """
 ==========================================================================
 Make Tabs
 """
 
+# =======Play tab components
 
-#=======Play tab components
+asset_allocation_card = dbc.Card(asset_allocation_text, className="mt-2")
 
-asset_allocation_card = html.Div(
-    dbc.Card(
-        dbc.CardBody(html.Div(html.Div(asset_allocation_text, className="ml-3 mt-2"),)),
-        className="mt-4",
-    )
-)
-
-slider_card = html.Div(
-    dbc.Card(
-        dbc.CardBody(
-            [
-                html.H4("First set cash allocation %:", className="card-title"),
-                dcc.Slider(
-                    id="cash",
-                    marks={i: f"{i}%" for i in range(0, 101, 10)},
-                    min=0,
-                    max=100,
-                    step=5,
-                    value=10,
-                    included=False,
-                    persistence=True,
-                    persistence_type="session",
-                ),
-                html.H4("Then set stock allocation % ", className="card-title mt-3",),
-                html.Div("(The rest will be bonds)", className="card-title"),
-                dcc.Slider(
-                    id="stock_bond",
-                    marks={i: f"{i}%" for i in range(0, 91, 10)},
-                    persistence=True,
-                    persistence_type="session",
-                    min=0,
-                    max=90,
-                    step=5,
-                    value=50,
-                    included=False,
-                ),
-            ],
-        ),
-        className="mt-4",
-    )
-)
-
-inflation_checkbox = html.Div(
-    dcc.Checklist(
-        id="inflation",
-        persistence=True,
-        persistence_type="session",
-        labelClassName="m-2",
-        inputClassName="mr-3",
-        options=[{"label": "Include inflation on graph", "value": "Yes",}],
-        value=["Yes"],
-    )
-)
-
-
-time_period_card = html.Div(
-    dbc.Card(
+slider_card = dbc.Card(
+    dbc.CardBody(
         [
-            html.H4("Or check out one of these time periods:", className="card-title"),
-            dcc.RadioItems(
-                id="select_timeframe",
-                options=[
-                    {
-                        "label": f"2007-2008: Great Financial Crisis to {MAX_YR}",
-                        "value": "2007",
-                    },
-                    {
-                        "label": "1999-2010: The decade including 2000 Dotcom Bubble peak",
-                        "value": "1999",
-                    },
-                    {"label": "1969-1979:  The 1970s Energy Crisis", "value": "1970"},
-                    {
-                        "label": f"1929-1940:  The 20 years following the Great Depression",
-                        "value": "1929",
-                    },
-                    {"label": f"{MIN_YR}-{MAX_YR}", "value": "1928"},
-                ],
-                labelStyle={"display": "block"},
-                labelClassName="m-2",
-                inputClassName="mr-3",
-                value="2007",
+            html.H4("First set cash allocation %:", className="card-title"),
+            dcc.Slider(
+                id="cash",
+                marks={i: f"{i}%" for i in range(0, 101, 10)},
+                min=0,
+                max=100,
+                step=5,
+                value=10,
+                included=False,
+            ),
+            html.H4(
+                "Then set stock allocation % ",
+                className="card-title mt-3",
+            ),
+            html.Div("(The rest will be bonds)", className="card-title"),
+            dcc.Slider(
+                id="stock_bond",
+                marks={i: f"{i}%" for i in range(0, 91, 10)},
+                min=0,
+                max=90,
+                step=5,
+                value=50,
+                included=False,
             ),
         ],
-        body=True,
-        className="mt-4",
-    )
+    ),
+    className="mt-4",
 )
+
+
+inflation_checkbox = dbc.Checkbox(
+    id="inflation", label="Include inflation on graph", value=True
+)
+
+
+time_period_card = dbc.Card(
+    [
+        html.H4(
+            "Or check out one of these time periods:",
+            className="card-title",
+        ),
+        dbc.RadioItems(
+            id="select_timeframe",
+            options=[
+                {
+                    "label": f"2007-2008: Great Financial Crisis to {MAX_YR}",
+                    "value": "2007",
+                },
+                {
+                    "label": "1999-2010: The decade including 2000 Dotcom Bubble peak",
+                    "value": "1999",
+                },
+                {
+                    "label": "1969-1979:  The 1970s Energy Crisis",
+                    "value": "1970",
+                },
+                {
+                    "label": "1929-1940:  The 20 years following the Great Depression",
+                    "value": "1929",
+                },
+                {"label": f"{MIN_YR}-{MAX_YR}", "value": "1928"},
+            ],
+            labelClassName="mb-2",
+            value="2007",
+        ),
+    ],
+    body=True,
+    className="mt-4",
+)
+
 
 amount_input_card = html.Div(
-    dbc.Card(
-        [
-            dbc.InputGroup(
-                [
-                    dbc.InputGroupAddon("Start Amount $ :", addon_type="prepend"),
-                    dbc.Input(
-                        id="starting_amount",
-                        placeholder="Min $10",
-                        type="number",
-                        persistence=True,
-                        persistence_type="session",
-                        min=10,
-                        value=10000,
-                    ),
-                ],
-                className="mb-3",
-            ),
-            dbc.InputGroup(
-                [
-                    dbc.InputGroupAddon("Number of Years:", addon_type="prepend"),
-                    dbc.Input(
-                        id="planning_time",
-                        placeholder="#yrs",
-                        type="number",
-                        persistence=True,
-                        persistence_type="session",
-                        min=1,
-                        value=MAX_YR - START_YR + 1,
-                    ),
-                ],
-                className="mb-3",
-            ),
-            dbc.InputGroup(
-                [
-                    dbc.InputGroupAddon("Start Year:", addon_type="prepend"),
-                    dbc.Input(
-                        id="start_yr",
-                        placeholder=f"min {MIN_YR}   max {MAX_YR}",
-                        type="number",
-                        persistence=True,
-                        persistence_type="session",
-                        min=MIN_YR,
-                        max=MAX_YR,
-                        value=START_YR,
-                    ),
-                ],
-                className="mb-3",
-            ),
-            dbc.InputGroup(
-                [
-                    dbc.InputGroupAddon("My Portfolio Results: ", addon_type="prepend"),
-                    dbc.Input(id="results", type="text", disabled=True,),
-                ],
-                className="mb-3",
-                style={"width": "375px"},
-            ),
-        ],
-        body=True,
-        className="mt-4",
-    )
+    [
+        dbc.InputGroup(
+            [
+                dbc.InputGroupText("Start Amount $ :"),
+                dbc.Input(
+                    id="starting_amount",
+                    placeholder="Min $10",
+                    type="number",
+                    min=10,
+                    value=10000,
+                ),
+            ],
+            className="mb-3",
+        ),
+        dbc.InputGroup(
+            [
+                dbc.InputGroupText("Number of Years:"),
+                dbc.Input(
+                    id="planning_time",
+                    placeholder="# yrs",
+                    type="number",
+                    min=1,
+                    value=MAX_YR - START_YR + 1,
+                ),
+            ],
+            className="mb-3",
+        ),
+        dbc.InputGroup(
+            [
+                dbc.InputGroupText("Start Year:"),
+                dbc.Input(
+                    id="start_yr",
+                    placeholder=f"min {MIN_YR}   max {MAX_YR}",
+                    type="number",
+                    min=MIN_YR,
+                    max=MAX_YR,
+                    value=START_YR,
+                ),
+            ],
+            className="mb-3",
+        ),
+        dbc.InputGroup(
+            [
+                dbc.InputGroupText("My Portfolio Results: "),
+                dbc.Input(
+                    id="results",
+                    disabled=True,
+                ),
+            ],
+            className="mb-3",
+        ),
+    ],
+    className="mt-4",
+    style={"maxWidth": 400},
 )
 
 # =====  Results Tab components
 
-results_card = html.Div(
-    dbc.Card(
-        [
-            dbc.CardHeader("My Portfolio Returns - Rebalanced Annually"),
-            dbc.CardBody(total_returns_table),
-        ],
-        outline=True,
-        className="mt-4",
-    )
+results_card = dbc.Card(
+    [
+        dbc.CardHeader("My Portfolio Returns - Rebalanced Annually"),
+        dbc.CardBody(total_returns_table),
+    ],
+    className="mt-4",
 )
 
-data_source_card = html.Div(
-    dbc.Card(
-        [
-            dbc.CardHeader("Source Data: Annual Total Returns",),
-            dbc.CardBody(annual_returns_pct_table),
-        ],
-        outline=True,
-        className="mt-4",
-    )
+
+data_source_card = dbc.Card(
+    [
+        dbc.CardHeader(
+            "Source Data: Annual Total Returns",
+        ),
+        dbc.CardBody(annual_returns_pct_table),
+    ],
+    className="mt-4",
 )
+
 
 # ========= Learn Tab  Components
-learn_card = html.Div(
-    dbc.Card(
-        [
-            dbc.CardHeader("An Introduction to Backtesting",),
-            dbc.CardBody(backtesting_text),
-        ],
-        outline=True,
-        className="mt-4",
-    )
+learn_card = dbc.Card(
+    [
+        dbc.CardHeader(
+            "An Introduction to Asset Allocation",
+        ),
+        dbc.CardBody(learn_text),
+    ],
+    className="mt-4",
 )
 
+
 # ========= Build tabs
-tabs = html.Div(
-    dbc.Tabs(
-        [
-            dbc.Tab(
-                learn_card,
-                tab_id="tab1",
-                label="Learn",
-                label_style={"font-size": "150%", "width": "125px"},
-            ),
-            dbc.Tab(
-                [
-                    asset_allocation_text,
-                    slider_card,
-                    amount_input_card,
-                    inflation_checkbox,
-                    time_period_card,
-                ],
-                tab_id="tab-2",
-                label="Play",
-                label_style={"font-size": "150%", "width": "125px"},
-            ),
-            dbc.Tab(
-                [results_card, data_source_card],
-                tab_id="tab-3",
-                label="Results",
-                label_style={"font-size": "150%", "width": "125px"},
-            ),
-        ],
-        id="tabs",
-        active_tab="tab-2",
-    ),
-    style={"minHeight": "800px"},
+tabs = dbc.Tabs(
+    [
+        dbc.Tab(
+            learn_card,
+            tab_id="tab1",
+            label="Learn",
+            label_style={"font-size": "150%", "width": "125px"},
+        ),
+        dbc.Tab(
+            [
+                asset_allocation_text,
+                slider_card,
+                amount_input_card,
+                inflation_checkbox,
+                time_period_card,
+                dbc.Button("Print", id="print", className="mt-4"),
+            ],
+            tab_id="tab-2",
+            label="Play",
+            label_style={"font-size": "150%", "width": "125px"},
+        ),
+        dbc.Tab(
+            [results_card, data_source_card],
+            tab_id="tab-3",
+            label="Results",
+            label_style={"font-size": "150%", "width": "125px"},
+        ),
+    ],
+    id="tabs",
+    active_tab="tab-2",
 )
+
 
 """
 ===========================================================================
@@ -568,26 +517,26 @@ app.layout = dbc.Container(
         ),
         dbc.Row(
             [
-                dbc.Col(tabs, width={"size": 5, "order": 1}, className="mt-4 border",),
+                dbc.Col(tabs, width=12, md=6, className="mt-4 border"),
                 dbc.Col(
                     [
                         dcc.Graph(id="pie_allocation", className="mb-2"),
-                        dcc.Graph(id="returns_chart", className="border"),
-                        html.H6(datasource_text),
+                        dcc.Graph(id="returns_chart", className="pb-4"),
+                        html.Hr(),
                         html.Div(id="summary_table"),
-                        dbc.Button('Print', id='print', className="mt-4")
+                        html.H6(datasource_text, className="my-2"),
                     ],
-                    width={"size": 7, "order": 2},
+                    width=12,
+                    md=6,
                     className="pt-4 ",
                 ),
             ],
-            className="ml-4",
+            className="ms-1",
         ),
-        dbc.Row(dbc.Col(footer, className="mt-5")),
+        dbc.Row(dbc.Col(footer)),
     ],
     fluid=True,
 )
-
 
 """
 ==========================================================================
@@ -596,8 +545,8 @@ Calculations for  backtest results, cagr and worst periods
 
 
 def backtest(stocks, cash, start_bal, nper, start_yr, pmt):
-    """ calculates the investment returns for user selected asset allocation,
-        rebalanced annually
+    """calculates the investment returns for user selected asset allocation,
+    rebalanced annually
     """
 
     end_yr = start_yr + nper - 1
@@ -664,7 +613,7 @@ def backtest(stocks, cash, start_bal, nper, start_yr, pmt):
 
 
 def cagr(dff):
-    """calculate Compound Annual Growth Rate for a series: """
+    """calculate Compound Annual Growth Rate for a series:"""
 
     start_bal = dff.iat[0]
     end_bal = dff.iat[-1]
@@ -675,7 +624,7 @@ def cagr(dff):
 
 def worst(dff, asset):
     """calculate worst returns for asset in selected period
-            and format for display panel """
+    and format for display panel"""
 
     worst_yr_loss = min(dff[asset])
     worst_yr = dff.loc[dff[asset] == worst_yr_loss, "Year"].iloc[0]
@@ -740,8 +689,8 @@ def update_stock_slider(cash, initial_stock_value):
     Input("select_timeframe", "value"),
 )
 def update_timeframe(planning_time, start_yr, selected):
-    """ syncs inputs with selected time periods """
-    ctx = dash.callback_context
+    """syncs inputs with selected time periods"""
+    ctx = callback_context
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
     timeframe = {
         "2007": MAX_YR - START_YR + 1,
@@ -802,9 +751,10 @@ def update_totals(stocks, cash, start_bal, planning_time, start_yr, inflation):
 
     summary_table = make_summary_table(dff)
 
-    results = "${:0,.0f}     {}".format(dff["Total"].iloc[-1], cagr(dff["Total"]))
+    results = "${:0,.0f}   {}".format(dff["Total"].iloc[-1], cagr(dff["Total"]))
 
     return data, figure, summary_table, results
+
 
 app.clientside_callback(
     """
@@ -815,10 +765,9 @@ app.clientside_callback(
         return ""
     }
     """,
-    Output('print', 'target'),
-    Input('print', 'n_clicks'),
+    Output("print", "target"),
+    Input("print", "n_clicks"),
 )
-
 
 if __name__ == "__main__":
     app.run_server(debug=True)

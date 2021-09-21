@@ -1,7 +1,6 @@
-dash>=1.19.0
+dash>=2.0.0
 pandas
-xlrd
-dash-bootstrap-components
+dash-bootstrap-components>=1.0.0b2
 openpyxl
-plotly-express
-dash-daq
+
+
