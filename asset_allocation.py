@@ -66,17 +66,18 @@ annual_returns_pct_table = dash_table.DataTable(
 def make_summary_table(dff):
     """Make html table to show cagr and  best and worst periods"""
 
+    table_class="h5 text-body text-nowrap"
     cash = html.Span(
-        [html.I(className="fa fa-money-bill-alt"), " Cash"], className="h5 text-body"
+        [html.I(className="fa fa-money-bill-alt"), " Cash"], className=table_class
     )
     bonds = html.Span(
-        [html.I(className="fa fa-handshake"), " Bonds"], className="h5 text-body"
+        [html.I(className="fa fa-handshake"), " Bonds"], className=table_class
     )
     stocks = html.Span(
-        [html.I(className="fa fa-industry"), " Stocks"], className="h5 text-body"
+        [html.I(className="fa fa-industry"), " Stocks"], className=table_class
     )
     inflation = html.Span(
-        [html.I(className="fa fa-ambulance"), " Inflation"], className="h5 text-body"
+        [html.I(className="fa fa-ambulance"), " Inflation"], className=table_class
     )
 
     start_yr = dff["Year"].iat[0]
@@ -306,7 +307,7 @@ inflation_checkbox = dbc.Checkbox(
 time_period_card = dbc.Card(
     [
         html.H4(
-            "Or check out one of these time periods:",
+            "Or select a time period:",
             className="card-title",
         ),
         dbc.RadioItems(
@@ -383,8 +384,8 @@ amount_input_card = html.Div(
         ),
         dbc.InputGroup(
             [
-                dbc.InputGroupText("My Portfolio Results: ", className="h1 text-body"),
-                dbc.Input(id="results", disabled=True, className="h1 text-body"),
+                dbc.InputGroupText("My Portfolio Results: ", className="text-black"),
+                dbc.Input(id="results", disabled=True, className="text-black"),
             ],
             className="mb-3",
         ),
