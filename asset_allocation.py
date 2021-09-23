@@ -20,8 +20,8 @@ START_YR = 2007
 
 COLORS = {
     "cash": "#3cb521",
-    "bonds": "#f5b668",
-    "stocks": "#3399f3",
+    "bonds": "#fd7e14",
+    "stocks": "#446e9b",
     "inflation": "#cd0200",
     "background": "whitesmoke",
 }
