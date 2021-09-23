@@ -18,6 +18,14 @@ MAX_YR = df.Year.max()
 MIN_YR = df.Year.min()
 START_YR = 2007
 
+COLORS = {
+    "cash": "#3cb521",
+    "bonds": "#f5b668",
+    "stocks": "#3399f3",
+    "inflation": "#cd0200",
+    "background": "whitesmoke",
+}
+
 # since data is as of year end, need to add start year
 df = (
     df.append({"Year": MIN_YR - 1}, ignore_index=True)
@@ -34,10 +42,10 @@ total_returns_table = dash_table.DataTable(
     id="total_returns",
     columns=[{"id": "Year", "name": "Year", "type": "text"}]
     + [
-        {"id": col, "name": col, "type": "numeric", "format": {"specifier": "$,.0f"},}
+        {"id": col, "name": col, "type": "numeric", "format": {"specifier": "$,.0f"}}
         for col in ["Cash", "Bonds", "Stocks", "Total"]
     ],
-    style_table={"overflowY": "scroll",},
+    page_size=15,
 )
 
 annual_returns_pct_table = dash_table.DataTable(
@@ -45,12 +53,13 @@ annual_returns_pct_table = dash_table.DataTable(
     columns=(
         [{"id": "Year", "name": "Year", "type": "text"}]
         + [
-            {"id": col, "name": col, "type": "numeric", "format": {"specifier": ".1%"},}
+            {"id": col, "name": col, "type": "numeric", "format": {"specifier": ".1%"}}
             for col in df.columns[1:]
         ]
     ),
     data=df.to_dict("records"),
-    style_table={"overflowY": "scroll", "maxHeight": 400},
+    style_table={"overflowX": "scroll"},
+    page_size=15,
 )
 
 
@@ -58,7 +67,7 @@ def make_summary_table(dff):
     """Make html table to show cagr and  best and worst periods"""
 
     cash = html.Span(
-        [html.I(className="fa fa-money-bill-alt"), "  Cash"], className="h5 text-body"
+        [html.I(className="fa fa-money-bill-alt"), " Cash"], className="h5 text-body"
     )
     bonds = html.Span(
         [html.I(className="fa fa-handshake"), " Bonds"], className="h5 text-body"
@@ -90,9 +99,7 @@ def make_summary_table(dff):
             ],
         }
     )
-    return dbc.Table.from_dataframe(
-        df_table, bordered=True, hover=True, style={"backgroundColor": "whitesmoke"}
-    )
+    return dbc.Table.from_dataframe(df_table, bordered=True, hover=True)
 
 
 """
@@ -102,7 +109,6 @@ Figures
 
 
 def make_pie(slider_input, title):
-    colors = ["#3cb521", "#f5b668", "#3399f3"]
     fig = go.Figure(
         data=[
             go.Pie(
@@ -110,7 +116,7 @@ def make_pie(slider_input, title):
                 values=slider_input,
                 textinfo="label+percent",
                 textposition="inside",
-                marker=dict(colors=colors),
+                marker={"colors": [COLORS["cash"], COLORS["bonds"], COLORS["stocks"]]},
                 sort=False,
                 hoverinfo="none",
             )
@@ -119,62 +125,63 @@ def make_pie(slider_input, title):
     fig.update_layout(
         title_text=title,
         title_x=0.5,
-        margin=go.layout.Margin(b=25, t=75, l=35, r=25),
+        margin=dict(b=25, t=75, l=35, r=25),
         height=325,
-        paper_bgcolor="whitesmoke",
+        paper_bgcolor=COLORS["background"],
     )
     return fig
 
 
 def make_returns_chart(dff):
     start = dff.loc[1, "Year"]
-    x = dff["Year"]
     yrs = dff["Year"].size - 1
-    title = f"Returns for {yrs} years starting {start}"
     dtick = 1 if yrs < 16 else 2 if yrs in range(16, 30) else 5
 
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
-            x=x, y=dff["all_cash"], name="All Cash", marker=dict(color="#3cb521"),
+            x=dff["Year"],
+            y=dff["all_cash"],
+            name="All Cash",
+            marker_color=COLORS["cash"],
         )
     )
     fig.add_trace(
         go.Scatter(
-            x=x,
+            x=dff["Year"],
             y=dff["all_bonds"],
             name="All Bonds (10yr T.Bonds)",
-            marker=dict(color="#d47500"),
+            marker_color=COLORS["bonds"],
         )
     )
     fig.add_trace(
         go.Scatter(
-            x=x,
+            x=dff["Year"],
             y=dff["all_stocks"],
             name="All Stocks (S&P500)",
-            marker=dict(color="#3399f3"),
+            marker_color=COLORS["stocks"],
         )
     )
     fig.add_trace(
         go.Scatter(
-            x=x,
+            x=dff["Year"],
             y=dff["Total"],
             name="My Portfolio",
-            marker=dict(color="black"),
+            marker_color="black",
             line=dict(width=6, dash="dot"),
         )
     )
     fig.add_trace(
         go.Scatter(
-            x=x,
+            x=dff["Year"],
             y=dff["inflation_only"],
             name="Inflation",
             visible=True,
-            marker=dict(color="#cd0200"),
+            marker_color=COLORS["inflation"],
         )
     )
     fig.update_layout(
-        title=title,
+        title=f"Returns for {yrs} years starting {start}",
         template="none",
         showlegend=True,
         legend=dict(x=0.01, y=0.99),
@@ -202,14 +209,11 @@ datasource_text = dcc.Markdown(
 asset_allocation_text = dcc.Markdown(
     """
 
-> **Asset allocation** is One of the main factors that determines your
-  portfolio returns and volatility over time.  Play with the app and see
-  for yourself!
+> **Asset allocation** is one of the main drivers of investment results.  Balance the risk (volatility) and rewards 
+  by changing how much you invest in   different asset classes.   Play with the app and see for yourself!
 
-> See "My Portfolio",   the dashed line in the graph, and watch how
-  your results change as you move the sliders to select different asset
-  allocations. You can enter different starting times and dollar amounts
-  too.
+> Change the allocation to cash, bonds and stocks on the sliders and see your portfolio results in the graph.
+  Try entering different time periods and dollar amounts too.
 """
 )
 
@@ -274,7 +278,10 @@ slider_card = dbc.Card(
                 value=10,
                 included=False,
             ),
-            html.H4("Then set stock allocation % ", className="card-title mt-3",),
+            html.H4(
+                "Then set stock allocation % ",
+                className="card-title mt-3",
+            ),
             html.Div("(The rest will be bonds)", className="card-title"),
             dcc.Slider(
                 id="stock_bond",
@@ -298,7 +305,10 @@ inflation_checkbox = dbc.Checkbox(
 
 time_period_card = dbc.Card(
     [
-        html.H4("Or check out one of these time periods:", className="card-title",),
+        html.H4(
+            "Or check out one of these time periods:",
+            className="card-title",
+        ),
         dbc.RadioItems(
             id="select_timeframe",
             options=[
@@ -310,7 +320,10 @@ time_period_card = dbc.Card(
                     "label": "1999-2010: The decade including 2000 Dotcom Bubble peak",
                     "value": "1999",
                 },
-                {"label": "1969-1979:  The 1970s Energy Crisis", "value": "1970",},
+                {
+                    "label": "1969-1979:  The 1970s Energy Crisis",
+                    "value": "1970",
+                },
                 {
                     "label": "1929-1948:  The 20 years following the start of the Great Depression",
                     "value": "1929",
@@ -370,8 +383,8 @@ amount_input_card = html.Div(
         ),
         dbc.InputGroup(
             [
-                dbc.InputGroupText("My Portfolio Results: "),
-                dbc.Input(id="results", disabled=True,),
+                dbc.InputGroupText("My Portfolio Results: ", className="h1 text-body"),
+                dbc.Input(id="results", disabled=True, className="h1 text-body"),
             ],
             className="mb-3",
         ),
@@ -402,7 +415,10 @@ data_source_card = dbc.Card(
 
 # ========= Learn Tab  Components
 learn_card = dbc.Card(
-    [dbc.CardHeader("An Introduction to Asset Allocation"), dbc.CardBody(learn_text),],
+    [
+        dbc.CardHeader("An Introduction to Asset Allocation"),
+        dbc.CardBody(learn_text),
+    ],
     className="mt-4",
 )
 
@@ -677,7 +693,7 @@ def update_totals(stocks, cash, start_bal, planning_time, start_yr, inflation):
     # create portfolio results text
     dollars = dff["Total"].iloc[-1]
     percentage = cagr(dff["Total"])
-    my_portfolio_results = f"${dollars:0,.0f}  {percentage}"
+    my_portfolio_results = f"${dollars:0,.0f}    {percentage}"
 
     return data, fig, make_summary_table(dff), my_portfolio_results
 
