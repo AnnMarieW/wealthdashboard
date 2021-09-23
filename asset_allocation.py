@@ -34,17 +34,10 @@ total_returns_table = dash_table.DataTable(
     id="total_returns",
     columns=[{"id": "Year", "name": "Year", "type": "text"}]
     + [
-        {
-            "id": col,
-            "name": col,
-            "type": "numeric",
-            "format": {"specifier": "$,.0f"},
-        }
+        {"id": col, "name": col, "type": "numeric", "format": {"specifier": "$,.0f"},}
         for col in ["Cash", "Bonds", "Stocks", "Total"]
     ],
-    style_table={
-        "overflowY": "scroll",
-    },
+    style_table={"overflowY": "scroll",},
 )
 
 annual_returns_pct_table = dash_table.DataTable(
@@ -52,12 +45,7 @@ annual_returns_pct_table = dash_table.DataTable(
     columns=(
         [{"id": "Year", "name": "Year", "type": "text"}]
         + [
-            {
-                "id": col,
-                "name": col,
-                "type": "numeric",
-                "format": {"specifier": ".1%"},
-            }
+            {"id": col, "name": col, "type": "numeric", "format": {"specifier": ".1%"},}
             for col in df.columns[1:]
         ]
     ),
@@ -148,10 +136,7 @@ def make_returns_chart(dff):
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
-            x=x,
-            y=dff["all_cash"],
-            name="All Cash",
-            marker=dict(color="#3cb521"),
+            x=x, y=dff["all_cash"], name="All Cash", marker=dict(color="#3cb521"),
         )
     )
     fig.add_trace(
@@ -289,10 +274,7 @@ slider_card = dbc.Card(
                 value=10,
                 included=False,
             ),
-            html.H4(
-                "Then set stock allocation % ",
-                className="card-title mt-3",
-            ),
+            html.H4("Then set stock allocation % ", className="card-title mt-3",),
             html.Div("(The rest will be bonds)", className="card-title"),
             dcc.Slider(
                 id="stock_bond",
@@ -316,10 +298,7 @@ inflation_checkbox = dbc.Checkbox(
 
 time_period_card = dbc.Card(
     [
-        html.H4(
-            "Or check out one of these time periods:",
-            className="card-title",
-        ),
+        html.H4("Or check out one of these time periods:", className="card-title",),
         dbc.RadioItems(
             id="select_timeframe",
             options=[
@@ -331,12 +310,9 @@ time_period_card = dbc.Card(
                     "label": "1999-2010: The decade including 2000 Dotcom Bubble peak",
                     "value": "1999",
                 },
+                {"label": "1969-1979:  The 1970s Energy Crisis", "value": "1970",},
                 {
-                    "label": "1969-1979:  The 1970s Energy Crisis",
-                    "value": "1970",
-                },
-                {
-                    "label": "1929-1940:  The 20 years following the Great Depression",
+                    "label": "1929-1948:  The 20 years following the start of the Great Depression",
                     "value": "1929",
                 },
                 {"label": f"{MIN_YR}-{MAX_YR}", "value": "1928"},
@@ -395,10 +371,7 @@ amount_input_card = html.Div(
         dbc.InputGroup(
             [
                 dbc.InputGroupText("My Portfolio Results: "),
-                dbc.Input(
-                    id="results",
-                    disabled=True,
-                ),
+                dbc.Input(id="results", disabled=True,),
             ],
             className="mb-3",
         ),
@@ -429,10 +402,7 @@ data_source_card = dbc.Card(
 
 # ========= Learn Tab  Components
 learn_card = dbc.Card(
-    [
-        dbc.CardHeader("An Introduction to Asset Allocation"),
-        dbc.CardBody(learn_text),
-    ],
+    [dbc.CardHeader("An Introduction to Asset Allocation"), dbc.CardBody(learn_text),],
     className="mt-4",
 )
 
@@ -485,6 +455,7 @@ app.layout = dbc.Container(
                         html.Hr(),
                         html.Div(id="summary_table"),
                         html.H6(datasource_text, className="my-2"),
+                        html.Div(id="dummy_div"),
                     ],
                     width=12,
                     lg=7,
@@ -504,7 +475,7 @@ Helper functions to calculate investment results, cagr and worst periods
 """
 
 
-def backtest(stocks, cash, start_bal, nper, start_yr, pmt):
+def backtest(stocks, cash, start_bal, nper, start_yr):
     """calculates the investment returns for user selected asset allocation,
     rebalanced annually
     """
@@ -625,10 +596,7 @@ def update_pie(stocks, cash):
 )
 def update_stock_slider(cash, initial_stock_value):
     max_slider = 100 - int(cash)
-    if initial_stock_value > max_slider:
-        stocks = max_slider
-    else:
-        stocks = initial_stock_value
+    stocks = min(max_slider, initial_stock_value)
 
     # formats the slider scale
     if max_slider > 50:
@@ -648,11 +616,12 @@ def update_stock_slider(cash, initial_stock_value):
     Input("start_yr", "value"),
     Input("select_timeframe", "value"),
 )
-def update_timeframe(planning_time, start_yr, selected):
-    """syncs inputs with selected time periods"""
+def update_timeframe(planning_time, start_yr, timeframe_start):
+    """syncs inputs and selected time periods"""
     ctx = callback_context
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    timeframe = {
+
+    timeframe_years = {
         "2007": MAX_YR - START_YR + 1,
         "1999": 10,
         "1970": 10,
@@ -660,11 +629,13 @@ def update_timeframe(planning_time, start_yr, selected):
         "1928": MAX_YR - MIN_YR + 1,
     }
     if trigger_id == "select_timeframe":
-        return timeframe[selected], selected, selected
+        planning_time = timeframe_years[timeframe_start]
+        start_yr = timeframe_start
+
     if trigger_id in ["planning_time", "start_yr"]:
-        selected = start_yr if timeframe.get(start_yr) == planning_time else None
-        return planning_time, start_yr, selected
-    return planning_time, start_yr, selected
+        timeframe_start = None
+
+    return planning_time, start_yr, timeframe_start
 
 
 @app.callback(
@@ -680,40 +651,35 @@ def update_timeframe(planning_time, start_yr, selected):
     Input("inflation", "value"),
 )
 def update_totals(stocks, cash, start_bal, planning_time, start_yr, inflation):
-    pmt = 0
-    if start_bal is None or start_bal < 10:
-        start_bal = 10
-    if planning_time is None or planning_time < 1:
-        planning_time = 1
-    if start_yr is None or int(start_yr) < MIN_YR:
-        start_yr = MIN_YR
-    if int(start_yr) > MAX_YR:
-        start_yr = MAX_YR
+    # set defaults for invalid inputs
+    start_bal = 10 if start_bal is None else start_bal
+    planning_time = 1 if planning_time is None else planning_time
+    start_yr = MIN_YR if start_yr is None else int(start_yr)
 
-    # calculate valid time frames and ranges for UI
-    max_time = MAX_YR + 1 - int(start_yr)
+    # calculate valid time frames and ranges
+    max_time = MAX_YR + 1 - start_yr
     planning_time = max_time if planning_time > max_time else planning_time
-    if int(start_yr) + planning_time > MAX_YR:
+    if start_yr + planning_time > MAX_YR:
         start_yr = min(df.iloc[-planning_time, 0], MAX_YR)  # 0 is Year column
-    start_yr = int(start_yr)
 
-    # create df of backtest results
-    dff = backtest(stocks, cash, start_bal, planning_time, start_yr, pmt)
+    # create investment results dataframe
+    dff = backtest(stocks, cash, start_bal, planning_time, start_yr)
 
-    # create data for  datatable
+    # create data for DataTable
     data = dff.to_dict("records")
 
     # create the line chart
-    figure = make_returns_chart(dff)
-    figure.update_traces(visible=False, selector=dict(name="Inflation"))
+    fig = make_returns_chart(dff)
+    fig.update_traces(visible=False, selector=dict(name="Inflation"))
     if inflation:
-        figure.update_traces(visible=True, selector=dict(name="Inflation"))
+        fig.update_traces(visible=True, selector=dict(name="Inflation"))
 
-    summary_table = make_summary_table(dff)
+    # create portfolio results text
+    dollars = dff["Total"].iloc[-1]
+    percentage = cagr(dff["Total"])
+    my_portfolio_results = f"${dollars:0,.0f}  {percentage}"
 
-    results = "${:0,.0f} {}".format(dff["Total"].iloc[-1], cagr(dff["Total"]))
-
-    return data, figure, summary_table, results
+    return data, fig, make_summary_table(dff), my_portfolio_results
 
 
 app.clientside_callback(
@@ -725,7 +691,7 @@ app.clientside_callback(
         return ""
     }
     """,
-    Output("print", "target"),
+    Output("dummy_div", "children"),
     Input("print", "n_clicks"),
 )
 
