@@ -18,6 +18,13 @@ MAX_YR = df.Year.max()
 MIN_YR = df.Year.min()
 START_YR = 2007
 
+# since data is as of year end, need to add start year
+df = (
+    df.append({"Year": MIN_YR - 1}, ignore_index=True)
+    .sort_values("Year", ignore_index=True)
+    .fillna(0)
+)
+
 COLORS = {
     "cash": "#3cb521",
     "bonds": "#fd7e14",
@@ -26,11 +33,65 @@ COLORS = {
     "background": "whitesmoke",
 }
 
-# since data is as of year end, need to add start year
-df = (
-    df.append({"Year": MIN_YR - 1}, ignore_index=True)
-    .sort_values("Year", ignore_index=True)
-    .fillna(0)
+"""
+==========================================================================
+Markdown Text
+"""
+
+datasource_text = dcc.Markdown(
+    """
+    [Data source:](http://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html)
+    Historical Returns on Stocks, Bonds and Bills from NYU Stern School of
+    Business
+    """
+)
+
+asset_allocation_text = dcc.Markdown(
+    """
+> **Asset allocation** is one of the main factors that drive portfolio risk and returns.   Play with the app and see for yourself!
+
+> Change the allocation to cash, bonds and stocks on the sliders and see your portfolio returns in the graph.
+  Try entering different time periods and dollar amounts too.
+"""
+)
+
+learn_text = dcc.Markdown(
+    """
+    Past performance certainly does not determine future results, but you can still
+    learn a lot by reviewing how various asset classes have performed over time.
+
+    Use the sliders to change the asset allocation (how much you invest in cash vs
+    bonds vs stock) and see how this affects your returns.
+
+    Note that the results shown in "My Portfolio" assumes rebalancing was done at
+    the beginning of every year.  Also, this information is based on the S&P 500 index
+    as a proxy for "stocks", the 10 year US Treasury Bond for "bonds" and the 3 month
+    US Treasury Bill for "cash."  Your results of course,  would be different based
+    on your actual holdings.
+
+    This is intended to help you determine your investment philosophy and understand
+    what sort of risks and returns you might see for each asset category.
+
+    The  data is from [Aswath Damodaran](http://people.stern.nyu.edu/adamodar/New_Home_Page/home.htm)
+    who teaches  corporate finance and valuation at the Stern School of Business
+    at New York University.
+
+    Check out his excellent on-line course in
+    [Investment Philosophies.](http://people.stern.nyu.edu/adamodar/New_Home_Page/webcastinvphil.htm)
+    """
+)
+
+footer = html.Div(
+    dcc.Markdown(
+        """
+         This information is intended solely as general information for educational
+        and entertainment purposes only and is not a substitute for professional advice and
+        services from qualified financial services providers familiar with your financial
+        situation.    Questions?  Suggestions? Please don't hesitate to get in touch:
+          [Email](mailto:awardapps@fastmail.com?subject=cool)
+        """
+    ),
+    className="p-2 mt-5 bg-primary text-white small",
 )
 
 """
@@ -196,68 +257,6 @@ def make_returns_chart(dff):
 
 """
 ==========================================================================
-Markdown Text
-"""
-
-datasource_text = dcc.Markdown(
-    """
-    [Data source:](http://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html)
-    Historical Returns on Stocks, Bonds and Bills from NYU Stern School of
-    Business
-    """
-)
-
-asset_allocation_text = dcc.Markdown(
-    """
-
-> **Asset allocation** is one of the main factors that drive portfolio risk and returns.   Play with the app and see for yourself!
-
-> Change the allocation to cash, bonds and stocks on the sliders and see your portfolio returns in the graph.
-  Try entering different time periods and dollar amounts too.
-"""
-)
-
-learn_text = dcc.Markdown(
-    """
-    Past performance certainly does not determine future results, but you can still
-    learn a lot by reviewing how various asset classes have performed over time.
-
-    Use the sliders to change the asset allocation (how much you invest in cash vs
-    bonds vs stock) and see how this affects your returns.
-
-    Note that the results shown in "My Portfolio" assumes rebalancing was done at
-    the beginning of every year.  Also, this information is based on the S&P 500 index
-    as a proxy for "stocks", the 10 year US Treasury Bond for "bonds" and the 3 month
-    US Treasury Bill for "cash."  Your results of course,  would be different based
-    on your actual holdings.
-
-    This is intended to help you determine your investment philosophy and understand
-    what sort of risks and returns you might see for each asset category.
-
-    The  data is from [Aswath Damodaran](http://people.stern.nyu.edu/adamodar/New_Home_Page/home.htm)
-    who teaches  corporate finance and valuation at the Stern School of Business
-    at New York University.
-
-    Check out his excellent on-line course in
-    [Investment Philosophies.](http://people.stern.nyu.edu/adamodar/New_Home_Page/webcastinvphil.htm)
-    """
-)
-
-footer = html.Div(
-    dcc.Markdown(
-        """
-         This information is intended solely as general information for educational
-        and entertainment purposes only and is not a substitute for professional advice and
-        services from qualified financial services providers familiar with your financial
-        situation.    Questions?  Suggestions? Please don't hesitate to get in touch:
-          [Email](mailto:awardapps@fastmail.com?subject=cool)
-        """
-    ),
-    className="p-2 mt-5 bg-primary text-white small",
-)
-
-"""
-==========================================================================
 Make Tabs
 """
 
@@ -266,58 +265,74 @@ Make Tabs
 asset_allocation_card = dbc.Card(asset_allocation_text, className="mt-2")
 
 slider_card = dbc.Card(
-    dbc.CardBody(
-        [
-            html.H4("First set cash allocation %:", className="card-title"),
-            dcc.Slider(
-                id="cash",
-                marks={i: f"{i}%" for i in range(0, 101, 10)},
-                min=0,
-                max=100,
-                step=5,
-                value=10,
-                included=False,
-            ),
-            html.H4("Then set stock allocation % ", className="card-title mt-3",),
-            html.Div("(The rest will be bonds)", className="card-title"),
-            dcc.Slider(
-                id="stock_bond",
-                marks={i: f"{i}%" for i in range(0, 91, 10)},
-                min=0,
-                max=90,
-                step=5,
-                value=50,
-                included=False,
-            ),
-        ],
-    ),
+    [
+        html.H4("First set cash allocation %:", className="card-title"),
+        dcc.Slider(
+            id="cash",
+            marks={i: f"{i}%" for i in range(0, 101, 10)},
+            min=0,
+            max=100,
+            step=5,
+            value=10,
+            included=False,
+        ),
+        html.H4("Then set stock allocation % ", className="card-title mt-3",),
+        html.Div("(The rest will be bonds)", className="card-title"),
+        dcc.Slider(
+            id="stock_bond",
+            marks={i: f"{i}%" for i in range(0, 91, 10)},
+            min=0,
+            max=90,
+            step=5,
+            value=50,
+            included=False,
+        ),
+    ],
+    body=True,
     className="mt-4",
 )
+
+
+time_period_data = [
+    {
+        "label": f"2007-2008: Great Financial Crisis to {MAX_YR}",
+        "start_yr": 2007,
+        "planning_time": MAX_YR - START_YR + 1,
+    },
+    {
+        "label": "1999-2010: The decade including 2000 Dotcom Bubble peak",
+        "start_yr": 1999,
+        "planning_time": 10,
+    },
+    {
+        "label": "1969-1979:  The 1970s Energy Crisis",
+        "start_yr": 1970,
+        "planning_time": 10,
+    },
+    {
+        "label": "1929-1948:  The 20 years following the start of the Great Depression",
+        "start_yr": 1929,
+        "planning_time": 20,
+    },
+    {
+        "label": f"{MIN_YR}-{MAX_YR}",
+        "start_yr": "1928",
+        "planning_time": MAX_YR - MIN_YR + 1,
+    },
+]
 
 
 time_period_card = dbc.Card(
     [
         html.H4("Or select a time period:", className="card-title",),
         dbc.RadioItems(
-            id="select_timeframe",
+            id="time_period",
             options=[
-                {
-                    "label": f"2007-2008: Great Financial Crisis to {MAX_YR}",
-                    "value": "2007",
-                },
-                {
-                    "label": "1999-2010: The decade including 2000 Dotcom Bubble peak",
-                    "value": "1999",
-                },
-                {"label": "1969-1979:  The 1970s Energy Crisis", "value": "1970",},
-                {
-                    "label": "1929-1948:  The 20 years following the start of the Great Depression",
-                    "value": "1929",
-                },
-                {"label": f"{MIN_YR}-{MAX_YR}", "value": "1928"},
+                {"label": period["label"], "value": i}
+                for i, period in enumerate(time_period_data)
             ],
+            value=0,
             labelClassName="mb-2",
-            value="2007",
         ),
     ],
     body=True,
@@ -430,44 +445,6 @@ tabs = dbc.Tabs(
 
 
 """
-===========================================================================
-Main Layout
-"""
-
-app.layout = dbc.Container(
-    [
-        dbc.Row(
-            dbc.Col(
-                html.H2(
-                    "Asset Allocation Visualizer",
-                    className="text-center bg-primary text-white p-2",
-                ),
-            )
-        ),
-        dbc.Row(
-            [
-                dbc.Col(tabs, width=12, lg=5, className="mt-4 border"),
-                dbc.Col(
-                    [
-                        dcc.Graph(id="allocation_pie_chart", className="mb-2"),
-                        dcc.Graph(id="returns_chart", className="pb-4"),
-                        html.Hr(),
-                        html.Div(id="summary_table"),
-                        html.H6(datasource_text, className="my-2"),
-                    ],
-                    width=12,
-                    lg=7,
-                    className="pt-4",
-                ),
-            ],
-            className="ms-1",
-        ),
-        dbc.Row(dbc.Col(footer)),
-    ],
-    fluid=True,
-)
-
-"""
 ==========================================================================
 Helper functions to calculate investment results, cagr and worst periods
 """
@@ -475,7 +452,7 @@ Helper functions to calculate investment results, cagr and worst periods
 
 def backtest(stocks, cash, start_bal, nper, start_yr):
     """calculates the investment returns for user selected asset allocation,
-    rebalanced annually
+    rebalanced annually and returns a dataframe
     """
 
     end_yr = start_yr + nper - 1
@@ -542,7 +519,7 @@ def backtest(stocks, cash, start_bal, nper, start_yr):
 
 
 def cagr(dff):
-    """calculate Compound Annual Growth Rate for a series:"""
+    """calculate Compound Annual Growth Rate for a series and returns a formated string"""
 
     start_bal = dff.iat[0]
     end_bal = dff.iat[-1]
@@ -552,12 +529,50 @@ def cagr(dff):
 
 
 def worst(dff, asset):
-    """calculate worst returns for asset in selected period
-    and format for display panel"""
+    """calculate worst returns for asset in selected period returns formated string"""
 
     worst_yr_loss = min(dff[asset])
     worst_yr = dff.loc[dff[asset] == worst_yr_loss, "Year"].iloc[0]
     return f"{worst_yr_loss:.1%} in {worst_yr}"
+
+
+"""
+===========================================================================
+Main Layout
+"""
+
+app.layout = dbc.Container(
+    [
+        dbc.Row(
+            dbc.Col(
+                html.H2(
+                    "Asset Allocation Visualizer",
+                    className="text-center bg-primary text-white p-2",
+                ),
+            )
+        ),
+        dbc.Row(
+            [
+                dbc.Col(tabs, width=12, lg=5, className="mt-4 border"),
+                dbc.Col(
+                    [
+                        dcc.Graph(id="allocation_pie_chart", className="mb-2"),
+                        dcc.Graph(id="returns_chart", className="pb-4"),
+                        html.Hr(),
+                        html.Div(id="summary_table"),
+                        html.H6(datasource_text, className="my-2"),
+                    ],
+                    width=12,
+                    lg=7,
+                    className="pt-4",
+                ),
+            ],
+            className="ms-1",
+        ),
+        dbc.Row(dbc.Col(footer)),
+    ],
+    fluid=True,
+)
 
 
 """
@@ -609,31 +624,24 @@ def update_stock_slider(cash, initial_stock_value):
 @app.callback(
     Output("planning_time", "value"),
     Output("start_yr", "value"),
-    Output("select_timeframe", "value"),
+    Output("time_period", "value"),
     Input("planning_time", "value"),
     Input("start_yr", "value"),
-    Input("select_timeframe", "value"),
+    Input("time_period", "value"),
 )
-def update_timeframe(planning_time, start_yr, timeframe_start):
+def update_time_period(planning_time, start_yr, period_number):
     """syncs inputs and selected time periods"""
     ctx = callback_context
-    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-    timeframe_years = {
-        "2007": MAX_YR - START_YR + 1,
-        "1999": 10,
-        "1970": 10,
-        "1929": 20,
-        "1928": MAX_YR - MIN_YR + 1,
-    }
-    if trigger_id == "select_timeframe":
-        planning_time = timeframe_years[timeframe_start]
-        start_yr = timeframe_start
+    if input_id == "time_period":
+        planning_time = time_period_data[period_number]["planning_time"]
+        start_yr = time_period_data[period_number]["start_yr"]
 
-    if trigger_id in ["planning_time", "start_yr"]:
-        timeframe_start = None
+    if input_id in ["planning_time", "start_yr"]:
+        period_number = None
 
-    return planning_time, start_yr, timeframe_start
+    return planning_time, start_yr, period_number
 
 
 @app.callback(
@@ -654,9 +662,9 @@ def update_totals(stocks, cash, start_bal, planning_time, start_yr):
     planning_time = 1 if planning_time is None else planning_time
     start_yr = MIN_YR if start_yr is None else int(start_yr)
 
-    # calculate valid time frames and ranges
+    # calculate valid planning time start yr
     max_time = MAX_YR + 1 - start_yr
-    planning_time = max_time if planning_time > max_time else planning_time
+    planning_time = min(max_time, planning_time)
     if start_yr + planning_time > MAX_YR:
         start_yr = min(df.iloc[-planning_time, 0], MAX_YR)  # 0 is Year column
 
