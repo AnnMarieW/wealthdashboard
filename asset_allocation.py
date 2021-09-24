@@ -66,7 +66,7 @@ annual_returns_pct_table = dash_table.DataTable(
 def make_summary_table(dff):
     """Make html table to show cagr and  best and worst periods"""
 
-    table_class="h5 text-body text-nowrap"
+    table_class = "h5 text-body text-nowrap"
     cash = html.Span(
         [html.I(className="fa fa-money-bill-alt"), " Cash"], className=table_class
     )
@@ -210,10 +210,9 @@ datasource_text = dcc.Markdown(
 asset_allocation_text = dcc.Markdown(
     """
 
-> **Asset allocation** is one of the main drivers of investment results.  Balance the risk (volatility) and rewards 
-  by changing how much you invest in   different asset classes.   Play with the app and see for yourself!
+> **Asset allocation** is one of the main factors that drive portfolio risk and returns.   Play with the app and see for yourself!
 
-> Change the allocation to cash, bonds and stocks on the sliders and see your portfolio results in the graph.
+> Change the allocation to cash, bonds and stocks on the sliders and see your portfolio returns in the graph.
   Try entering different time periods and dollar amounts too.
 """
 )
@@ -279,10 +278,7 @@ slider_card = dbc.Card(
                 value=10,
                 included=False,
             ),
-            html.H4(
-                "Then set stock allocation % ",
-                className="card-title mt-3",
-            ),
+            html.H4("Then set stock allocation % ", className="card-title mt-3",),
             html.Div("(The rest will be bonds)", className="card-title"),
             dcc.Slider(
                 id="stock_bond",
@@ -299,17 +295,9 @@ slider_card = dbc.Card(
 )
 
 
-inflation_checkbox = dbc.Checkbox(
-    id="inflation", label="Include inflation on graph", value=True
-)
-
-
 time_period_card = dbc.Card(
     [
-        html.H4(
-            "Or select a time period:",
-            className="card-title",
-        ),
+        html.H4("Or select a time period:", className="card-title",),
         dbc.RadioItems(
             id="select_timeframe",
             options=[
@@ -321,10 +309,7 @@ time_period_card = dbc.Card(
                     "label": "1999-2010: The decade including 2000 Dotcom Bubble peak",
                     "value": "1999",
                 },
-                {
-                    "label": "1969-1979:  The 1970s Energy Crisis",
-                    "value": "1970",
-                },
+                {"label": "1969-1979:  The 1970s Energy Crisis", "value": "1970",},
                 {
                     "label": "1929-1948:  The 20 years following the start of the Great Depression",
                     "value": "1929",
@@ -344,13 +329,27 @@ amount_input_card = html.Div(
     [
         dbc.InputGroup(
             [
-                dbc.InputGroupText("Start Amount $ :"),
+                dbc.InputGroupText("Start Amount $"),
                 dbc.Input(
                     id="starting_amount",
                     placeholder="Min $10",
                     type="number",
                     min=10,
                     value=10000,
+                ),
+            ],
+            className="mb-3",
+        ),
+        dbc.InputGroup(
+            [
+                dbc.InputGroupText("Start Year"),
+                dbc.Input(
+                    id="start_yr",
+                    placeholder=f"min {MIN_YR}   max {MAX_YR}",
+                    type="number",
+                    min=MIN_YR,
+                    max=MAX_YR,
+                    value=START_YR,
                 ),
             ],
             className="mb-3",
@@ -370,28 +369,20 @@ amount_input_card = html.Div(
         ),
         dbc.InputGroup(
             [
-                dbc.InputGroupText("Start Year:"),
-                dbc.Input(
-                    id="start_yr",
-                    placeholder=f"min {MIN_YR}   max {MAX_YR}",
-                    type="number",
-                    min=MIN_YR,
-                    max=MAX_YR,
-                    value=START_YR,
-                ),
+                dbc.InputGroupText("Ending Amount"),
+                dbc.Input(id="ending_amount", disabled=True, className="text-black"),
             ],
             className="mb-3",
         ),
         dbc.InputGroup(
             [
-                dbc.InputGroupText("My Portfolio Results: ", className="text-black"),
-                dbc.Input(id="results", disabled=True, className="text-black"),
+                dbc.InputGroupText("Annual Returns (cagr) "),
+                dbc.Input(id="cagr", disabled=True, className="text-black"),
             ],
             className="mb-3",
         ),
     ],
-    className="mt-4",
-    style={"maxWidth": 400},
+    className="mt-4 p-4",
 )
 
 # =====  Results Tab components
@@ -416,10 +407,7 @@ data_source_card = dbc.Card(
 
 # ========= Learn Tab  Components
 learn_card = dbc.Card(
-    [
-        dbc.CardHeader("An Introduction to Asset Allocation"),
-        dbc.CardBody(learn_text),
-    ],
+    [dbc.CardHeader("An Introduction to Asset Allocation"), dbc.CardBody(learn_text),],
     className="mt-4",
 )
 
@@ -429,16 +417,10 @@ tabs = dbc.Tabs(
     [
         dbc.Tab(learn_card, tab_id="tab1", label="Learn"),
         dbc.Tab(
-            [
-                asset_allocation_text,
-                slider_card,
-                amount_input_card,
-                inflation_checkbox,
-                time_period_card,
-                dbc.Button("Print", id="print", className="mt-4"),
-            ],
+            [asset_allocation_text, slider_card, amount_input_card, time_period_card],
             tab_id="tab-2",
             label="Play",
+            className="pb-4",
         ),
         dbc.Tab([results_card, data_source_card], tab_id="tab-3", label="Results"),
     ],
@@ -472,11 +454,10 @@ app.layout = dbc.Container(
                         html.Hr(),
                         html.Div(id="summary_table"),
                         html.H6(datasource_text, className="my-2"),
-                        html.Div(id="dummy_div"),
                     ],
                     width=12,
                     lg=7,
-                    className="pt-4 ",
+                    className="pt-4",
                 ),
             ],
             className="ms-1",
@@ -659,15 +640,15 @@ def update_timeframe(planning_time, start_yr, timeframe_start):
     Output("total_returns", "data"),
     Output("returns_chart", "figure"),
     Output("summary_table", "children"),
-    Output("results", "value"),
+    Output("ending_amount", "value"),
+    Output("cagr", "value"),
     Input("stock_bond", "value"),
     Input("cash", "value"),
     Input("starting_amount", "value"),
     Input("planning_time", "value"),
     Input("start_yr", "value"),
-    Input("inflation", "value"),
 )
-def update_totals(stocks, cash, start_bal, planning_time, start_yr, inflation):
+def update_totals(stocks, cash, start_bal, planning_time, start_yr):
     # set defaults for invalid inputs
     start_bal = 10 if start_bal is None else start_bal
     planning_time = 1 if planning_time is None else planning_time
@@ -679,7 +660,7 @@ def update_totals(stocks, cash, start_bal, planning_time, start_yr, inflation):
     if start_yr + planning_time > MAX_YR:
         start_yr = min(df.iloc[-planning_time, 0], MAX_YR)  # 0 is Year column
 
-    # create investment results dataframe
+    # create investment returns dataframe
     dff = backtest(stocks, cash, start_bal, planning_time, start_yr)
 
     # create data for DataTable
@@ -687,30 +668,17 @@ def update_totals(stocks, cash, start_bal, planning_time, start_yr, inflation):
 
     # create the line chart
     fig = make_returns_chart(dff)
-    fig.update_traces(visible=False, selector=dict(name="Inflation"))
-    if inflation:
-        fig.update_traces(visible=True, selector=dict(name="Inflation"))
 
-    # create portfolio results text
-    dollars = dff["Total"].iloc[-1]
-    percentage = cagr(dff["Total"])
-    my_portfolio_results = f"${dollars:0,.0f}    {percentage}"
+    summary_table = make_summary_table(dff)
 
-    return data, fig, make_summary_table(dff), my_portfolio_results
+    # format ending balance
+    ending_amount = f"${dff['Total'].iloc[-1]:0,.0f}"
 
+    # calcluate cagr
+    ending_cagr = cagr(dff["Total"])
 
-app.clientside_callback(
-    """
-    function(n) {
-        if (n > 0) {
-          window.print()
-        }
-        return ""
-    }
-    """,
-    Output("dummy_div", "children"),
-    Input("print", "n_clicks"),
-)
+    return data, fig, summary_table, ending_amount, ending_cagr
+
 
 if __name__ == "__main__":
     app.run_server(debug=True)
