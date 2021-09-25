@@ -50,7 +50,7 @@ asset_allocation_text = dcc.Markdown(
     """
 > **Asset allocation** is one of the main factors that drive portfolio risk and returns.   Play with the app and see for yourself!
 
-> Change the allocation to cash, bonds and stocks on the sliders and see your portfolio returns in the graph.
+> Change the allocation to cash, bonds and stocks on the sliders and see how your portoflio performs over time in the graph.
   Try entering different time periods and dollar amounts too.
 """
 )
@@ -78,6 +78,14 @@ learn_text = dcc.Markdown(
 
     Check out his excellent on-line course in
     [Investment Philosophies.](http://people.stern.nyu.edu/adamodar/New_Home_Page/webcastinvphil.htm)
+    """
+)
+
+cagr_text = dcc.Markdown(
+    """
+    (CAGR) is the compound annual growth rate.  It measures the rate of return for an investment over a period of time, 
+    such as 5 or 10 years. The CAGR is also called a "smoothed" rate of return because it measures the growth of
+     an investment as if it had grown at a steady rate on an annually compounded basis.
     """
 )
 
@@ -119,8 +127,9 @@ annual_returns_pct_table = dash_table.DataTable(
         ]
     ),
     data=df.to_dict("records"),
-    style_table={"overflowX": "scroll"},
+    sort_action="native",
     page_size=15,
+    style_table={"overflowX": "scroll"},
 )
 
 
@@ -147,7 +156,7 @@ def make_summary_table(dff):
     df_table = pd.DataFrame(
         {
             "": [cash, bonds, stocks, inflation],
-            f"Annual returns (CAGR) from {start_yr} to {end_yr}": [
+            f"Rate of Return (CAGR) from {start_yr} to {end_yr}": [
                 cagr(dff["all_cash"]),
                 cagr(dff["all_bonds"]),
                 cagr(dff["all_stocks"]),
@@ -391,11 +400,16 @@ amount_input_card = html.Div(
         ),
         dbc.InputGroup(
             [
-                dbc.InputGroupText("Annual Returns (cagr) "),
+                dbc.InputGroupText(
+                    "Rate of Return(CAGR)",
+                    id="tooltip_target",
+                    className="text-decoration-underline",
+                ),
                 dbc.Input(id="cagr", disabled=True, className="text-black"),
             ],
             className="mb-3",
         ),
+        dbc.Tooltip(cagr_text, target="tooltip_target"),
     ],
     className="mt-4 p-4",
 )
@@ -405,7 +419,7 @@ amount_input_card = html.Div(
 results_card = dbc.Card(
     [
         dbc.CardHeader("My Portfolio Returns - Rebalanced Annually"),
-        dbc.CardBody(total_returns_table),
+        html.Div(total_returns_table),
     ],
     className="mt-4",
 )
@@ -414,7 +428,7 @@ results_card = dbc.Card(
 data_source_card = dbc.Card(
     [
         dbc.CardHeader("Source Data: Annual Total Returns"),
-        dbc.CardBody(annual_returns_pct_table),
+        html.Div(annual_returns_pct_table),
     ],
     className="mt-4",
 )
