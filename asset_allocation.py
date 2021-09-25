@@ -162,7 +162,7 @@ def make_summary_table(dff):
                 cagr(dff["all_stocks"]),
                 cagr(dff["inflation_only"]),
             ],
-            f"Worst Year from {start_yr} to {end_yr}": [
+            f"Worst 1 Year Return": [
                 worst(dff, "3-mon T.Bill"),
                 worst(dff, "10yr T.Bond"),
                 worst(dff, "S&P 500"),
