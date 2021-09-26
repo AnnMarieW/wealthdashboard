@@ -115,6 +115,7 @@ total_returns_table = dash_table.DataTable(
         for col in ["Cash", "Bonds", "Stocks", "Total"]
     ],
     page_size=15,
+    style_table={"overflowX": "scroll"},
 )
 
 annual_returns_pct_table = dash_table.DataTable(
@@ -203,7 +204,7 @@ def make_pie(slider_input, title):
     return fig
 
 
-def make_returns_chart(dff):
+def make_line_chart(dff):
     start = dff.loc[1, "Year"]
     yrs = dff["Year"].size - 1
     dtick = 1 if yrs < 16 else 2 if yrs in range(16, 30) else 5
@@ -691,7 +692,7 @@ def update_totals(stocks, cash, start_bal, planning_time, start_yr):
     data = dff.to_dict("records")
 
     # create the line chart
-    fig = make_returns_chart(dff)
+    fig = make_line_chart(dff)
 
     summary_table = make_summary_table(dff)
 
