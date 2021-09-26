@@ -348,71 +348,73 @@ time_period_card = dbc.Card(
     className="mt-4",
 )
 
+# ======= InputGroup components
 
-amount_input_card = html.Div(
+start_amount = dbc.InputGroup(
     [
-        dbc.InputGroup(
-            [
-                dbc.InputGroupText("Start Amount $"),
-                dbc.Input(
-                    id="starting_amount",
-                    placeholder="Min $10",
-                    type="number",
-                    min=10,
-                    value=10000,
-                ),
-            ],
-            className="mb-3",
+        dbc.InputGroupText("Start Amount $"),
+        dbc.Input(
+            id="starting_amount",
+            placeholder="Min $10",
+            type="number",
+            min=10,
+            value=10000,
         ),
-        dbc.InputGroup(
-            [
-                dbc.InputGroupText("Start Year"),
-                dbc.Input(
-                    id="start_yr",
-                    placeholder=f"min {MIN_YR}   max {MAX_YR}",
-                    type="number",
-                    min=MIN_YR,
-                    max=MAX_YR,
-                    value=START_YR,
-                ),
-            ],
-            className="mb-3",
-        ),
-        dbc.InputGroup(
-            [
-                dbc.InputGroupText("Number of Years:"),
-                dbc.Input(
-                    id="planning_time",
-                    placeholder="# yrs",
-                    type="number",
-                    min=1,
-                    value=MAX_YR - START_YR + 1,
-                ),
-            ],
-            className="mb-3",
-        ),
-        dbc.InputGroup(
-            [
-                dbc.InputGroupText("Ending Amount"),
-                dbc.Input(id="ending_amount", disabled=True, className="text-black"),
-            ],
-            className="mb-3",
-        ),
-        dbc.InputGroup(
-            [
-                dbc.InputGroupText(
-                    "Rate of Return(CAGR)",
-                    id="tooltip_target",
-                    className="text-decoration-underline",
-                ),
-                dbc.Input(id="cagr", disabled=True, className="text-black"),
-            ],
-            className="mb-3",
-        ),
-        dbc.Tooltip(cagr_text, target="tooltip_target"),
     ],
+    className="mb-3",
+)
+start_year = dbc.InputGroup(
+    [
+        dbc.InputGroupText("Start Year"),
+        dbc.Input(
+            id="start_yr",
+            placeholder=f"min {MIN_YR}   max {MAX_YR}",
+            type="number",
+            min=MIN_YR,
+            max=MAX_YR,
+            value=START_YR,
+        ),
+    ],
+    className="mb-3",
+)
+number_of_years = dbc.InputGroup(
+    [
+        dbc.InputGroupText("Number of Years:"),
+        dbc.Input(
+            id="planning_time",
+            placeholder="# yrs",
+            type="number",
+            min=1,
+            value=MAX_YR - START_YR + 1,
+        ),
+    ],
+    className="mb-3",
+)
+end_amount = dbc.InputGroup(
+    [
+        dbc.InputGroupText("Ending Amount"),
+        dbc.Input(id="ending_amount", disabled=True, className="text-black"),
+    ],
+    className="mb-3",
+)
+rate_of_return = dbc.InputGroup(
+    [
+        dbc.InputGroupText(
+            "Rate of Return(CAGR)",
+            id="tooltip_target",
+            className="text-decoration-underline",
+        ),
+        dbc.Input(id="cagr", disabled=True, className="text-black"),
+    ],
+    className="mb-3",
+)
+tooltip = (dbc.Tooltip(cagr_text, target="tooltip_target"))
+
+input_groups = html.Div(
+    [start_amount, start_year, number_of_years, end_amount, rate_of_return],
     className="mt-4 p-4",
 )
+
 
 # =====  Results Tab components
 
@@ -446,7 +448,7 @@ tabs = dbc.Tabs(
     [
         dbc.Tab(learn_card, tab_id="tab1", label="Learn"),
         dbc.Tab(
-            [asset_allocation_text, slider_card, amount_input_card, time_period_card],
+            [asset_allocation_text, slider_card, input_groups, time_period_card],
             tab_id="tab-2",
             label="Play",
             className="pb-4",
