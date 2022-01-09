@@ -5,7 +5,28 @@ import plotly.graph_objects as go
 import pandas as pd
 import pathlib
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.SPACELAB, dbc.icons.FONT_AWESOME])
+app_description = """
+How does asset allocation affects portfolio performance?   Select the percentage of stocks, bonds and cash
+ in a portfolio and and see annual returns over any time period from 1928 to 2021.
+"""
+app_title = "Asset Allocation Visualizer"
+app_image = "/assets/asset_allocation.png"
+
+metas = [
+    {"name": "viewport", "content": "width=device-width, initial-scale=1"},
+    {"property":"twitter:card", "content":app_description},
+    {"property":"twitter:url", "content":"https://metatags.io/"},
+    {"property":"twitter:title", "content":app_title},
+    {"property":"twitter:description", "content":app_description},
+    {"property":"twitter:image", "content":app_image},
+
+    {"property":"og:title", "content":app_title},
+    {"property":"og:type", "content":"website"},
+    {"property":"og:description", "content":app_description},
+    {"property":"og:image", "content":app_image}
+]
+
+app = Dash(__name__, external_stylesheets=[dbc.themes.SPACELAB, dbc.icons.FONT_AWESOME], meta_tags=metas, title=app_title)
 
 # set relative path
 PATH = pathlib.Path(__file__).parent
