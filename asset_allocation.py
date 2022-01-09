@@ -7,7 +7,7 @@ import pathlib
 
 app_description = """
 How does asset allocation affects portfolio performance?   Select the percentage of stocks, bonds and cash
- in a portfolio and and see annual returns over any time period from 1928 to 2021.
+ in a portfolio and see annual returns over any time period from 1928 to 2021.
 """
 app_title = "Asset Allocation Visualizer"
 app_image = "/assets/asset_allocation.png"
