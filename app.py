@@ -3,37 +3,36 @@ from dash import Dash, dcc, html, dash_table, Input, Output, State, callback_con
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import pandas as pd
-import pathlib
 
 app_description = """
-How does asset allocation affects portfolio performance?   Select the percentage of stocks, bonds and cash
+How does asset allocation affect portfolio performance?   Select the percentage of stocks, bonds and cash
  in a portfolio and see annual returns over any time period from 1928 to 2021.
 """
 app_title = "Asset Allocation Visualizer"
-app_image = "/assets/asset_allocation.png"
+app_image = "/assets/app.png"
 
 metas = [
     {"name": "viewport", "content": "width=device-width, initial-scale=1"},
-    {"property":"twitter:card", "content":app_description},
-    {"property":"twitter:url", "content":"https://metatags.io/"},
-    {"property":"twitter:title", "content":app_title},
-    {"property":"twitter:description", "content":app_description},
-    {"property":"twitter:image", "content":app_image},
-
-    {"property":"og:title", "content":app_title},
-    {"property":"og:type", "content":"website"},
-    {"property":"og:description", "content":app_description},
-    {"property":"og:image", "content":app_image}
+    {"property": "twitter:card", "content": app_description},
+    {"property": "twitter:url", "content": "https://metatags.io/"},
+    {"property": "twitter:title", "content": app_title},
+    {"property": "twitter:description", "content": app_description},
+    {"property": "twitter:image", "content": app_image},
+    {"property": "og:title", "content": app_title},
+    {"property": "og:type", "content": "website"},
+    {"property": "og:description", "content": app_description},
+    {"property": "og:image", "content": app_image},
 ]
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.SPACELAB, dbc.icons.FONT_AWESOME], meta_tags=metas, title=app_title)
-
-# set relative path
-PATH = pathlib.Path(__file__).parent
-DATA_PATH = PATH.joinpath("./data").resolve()
+app = Dash(
+    __name__,
+    external_stylesheets=[dbc.themes.SPACELAB, dbc.icons.FONT_AWESOME],
+    meta_tags=metas,
+    title=app_title,
+)
 
 #  make dataframe from  spreadsheet:
-df = pd.read_excel(DATA_PATH.joinpath("historic.xlsx"))
+df = pd.read_csv("assets/historic.csv")
 
 MAX_YR = df.Year.max()
 MIN_YR = df.Year.min()
@@ -307,7 +306,10 @@ slider_card = dbc.Card(
             value=10,
             included=False,
         ),
-        html.H4("Then set stock allocation % ", className="card-title mt-3",),
+        html.H4(
+            "Then set stock allocation % ",
+            className="card-title mt-3",
+        ),
         html.Div("(The rest will be bonds)", className="card-title"),
         dcc.Slider(
             id="stock_bond",
@@ -355,7 +357,10 @@ time_period_data = [
 
 time_period_card = dbc.Card(
     [
-        html.H4("Or select a time period:", className="card-title",),
+        html.H4(
+            "Or select a time period:",
+            className="card-title",
+        ),
         dbc.RadioItems(
             id="time_period",
             options=[
@@ -427,10 +432,10 @@ rate_of_return = dbc.InputGroup(
             className="text-decoration-underline",
         ),
         dbc.Input(id="cagr", disabled=True, className="text-black"),
+        dbc.Tooltip(cagr_text, target="tooltip_target"),
     ],
     className="mb-3",
 )
-tooltip = (dbc.Tooltip(cagr_text, target="tooltip_target"))
 
 input_groups = html.Div(
     [start_amount, start_year, number_of_years, end_amount, rate_of_return],
@@ -460,7 +465,10 @@ data_source_card = dbc.Card(
 
 # ========= Learn Tab  Components
 learn_card = dbc.Card(
-    [dbc.CardHeader("An Introduction to Asset Allocation"), dbc.CardBody(learn_text),],
+    [
+        dbc.CardHeader("An Introduction to Asset Allocation"),
+        dbc.CardBody(learn_text),
+    ],
     className="mt-4",
 )
 
@@ -479,6 +487,7 @@ tabs = dbc.Tabs(
     ],
     id="tabs",
     active_tab="tab-2",
+    className="mt-2",
 )
 
 
