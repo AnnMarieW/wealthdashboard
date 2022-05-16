@@ -9,12 +9,12 @@ How does asset allocation affect portfolio performance?   Select the percentage 
  in a portfolio and see annual returns over any time period from 1928 to 2021.
 """
 app_title = "Asset Allocation Visualizer"
-app_image = "/assets/app.png"
+app_image = "https://www.wealthdashboard.app/assets/app.png"
 
 metas = [
     {"name": "viewport", "content": "width=device-width, initial-scale=1"},
-    {"property": "twitter:card", "content": app_description},
-    {"property": "twitter:url", "content": "https://metatags.io/"},
+    {"property": "twitter:card", "content": "summary_large_image"},
+    {"property": "twitter:url", "content": "https://www.wealthdashboard.app/"},
     {"property": "twitter:title", "content": app_title},
     {"property": "twitter:description", "content": app_description},
     {"property": "twitter:image", "content": app_image},
