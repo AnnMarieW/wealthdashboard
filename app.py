@@ -3,6 +3,7 @@ from dash import Dash, dcc, html, dash_table, Input, Output, State, callback_con
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import pandas as pd
+import about
 
 app_description = """
 How does asset allocation affect portfolio performance?   Select the percentage of stocks, bonds and cash
@@ -110,15 +111,17 @@ cagr_text = dcc.Markdown(
 )
 
 footer = html.Div(
-    dcc.Markdown(
-        """
-         This information is intended solely as general information for educational
-        and entertainment purposes only and is not a substitute for professional advice and
-        services from qualified financial services providers familiar with your financial
-        situation.    Questions?  Suggestions? Please don't hesitate to get in touch:
-          [Email](mailto:awardapps@fastmail.com?subject=cool)
-        """
-    ),
+    [
+        dcc.Markdown(
+            """
+             This information is intended solely as general information for educational
+            and entertainment purposes only and is not a substitute for professional advice and
+            services from qualified financial services providers familiar with your financial
+            situation.            
+            """
+        ),
+
+    ],
     className="p-2 mt-5 bg-primary text-white small",
 )
 
@@ -617,6 +620,7 @@ app.layout = dbc.Container(
             className="ms-1",
         ),
         dbc.Row(dbc.Col(footer)),
+        dbc.Row(dbc.Col(about.card, width="auto"), justify="center")
     ],
     fluid=True,
 )
