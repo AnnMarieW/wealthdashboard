@@ -23,7 +23,7 @@ def make_link(text, icon, link):
 
 
 button = dbc.Button(
-    "preorder", color="primary", href=nostarch, size="sm", className="mt-2 ms-1"
+    "order", color="primary", href=nostarch, size="sm", className="mt-2 ms-1"
 )
 
 cover_img = html.A(
@@ -42,8 +42,7 @@ text = dcc.Markdown(
 
 see_github = html.Span(
     [
-        "  See code in ",
-        html.A([html.I(className=github + " pe-1"), "GitHub"], href=book_github),
+        html.A([html.I(className=github + " p-1"), "GitHub"], href=book_github),
     ],
     className="lh-lg align-bottom",
 )
