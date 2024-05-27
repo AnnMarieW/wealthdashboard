@@ -522,6 +522,7 @@ def backtest(stocks, cash, start_bal, nper, start_yr):
     dff["Bonds"] = bonds_allocation * start_bal
     dff["Stocks"] = stocks_allocation * start_bal
     dff["Total"] = start_bal
+    dff["Total"] = dff["Total"].astype(float)
     dff["Rebalance"] = True
 
     # calculate My Portfolio returns
